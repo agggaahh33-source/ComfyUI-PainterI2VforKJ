@@ -5,7 +5,8 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "PainterI2VforKJ": "PainterI2V for KJ (动态增强)",
+    "PainterI2VforKJ": "PainterI2V for KJ",
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
+
