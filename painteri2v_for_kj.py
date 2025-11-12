@@ -19,6 +19,8 @@ class PainterI2VforKJ:
     def INPUT_TYPES(cls):
         return {
             "required": {
+                "motion_amplitude": ("FLOAT", {"default": 1.15, "min": 1.0, "max": 2.0, "step": 0.05, 
+                                             "tooltip": "核心参数：动态幅度增强系数，>1.0增强运动减少慢动作，1.0=禁用"}),
                 "width": ("INT", {"default": 832, "min": 64, "max": 8096, "step": 8, "tooltip": "输出视频宽度"}),
                 "height": ("INT", {"default": 480, "min": 64, "max": 8096, "step": 8, "tooltip": "输出视频高度"}),
                 "num_frames": ("INT", {"default": 81, "min": 1, "max": 10000, "step": 4, "tooltip": "总帧数"}),
@@ -26,8 +28,6 @@ class PainterI2VforKJ:
                 "start_latent_strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.001, "tooltip": "起始帧latent强度"}),
                 "end_latent_strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.001, "tooltip": "结束帧latent强度"}),
                 "force_offload": ("BOOLEAN", {"default": True, "tooltip": "处理完成后卸载VAE到CPU"}),
-                "motion_amplitude": ("FLOAT", {"default": 1.15, "min": 1.0, "max": 2.0, "step": 0.05, 
-                                             "tooltip": "核心参数：动态幅度增强系数，>1.0增强运动减少慢动作，1.0=禁用"}),
             },
             "optional": {
                 "vae": ("WANVAE", {"tooltip": "WanVideo VAE模型"}),
@@ -103,33 +103,27 @@ class PainterI2VforKJ:
         if y.shape[1] > 1:
             y[:, -1:] *= end_latent_strength
 
-        # ==================== PainterI2V 动态增强核心算法 (修复版) ====================
-        if motion_amplitude > 1.0 and y.shape[1] > 1:  # y: [C, T, H, W]
+        # ==================== PainterI2V 动态增强核心算法 ====================
+        if motion_amplitude > 1.0 and y.shape[1] > 1:
             print(f"\n🎨 [PainterI2V] 应用动态增强: amplitude={motion_amplitude:.2f}")
             
-            # 提取首帧和其余帧
             base_latent = y[:, 0:1]      # [C, 1, H, W]
             other_latent = y[:, 1:]      # [C, T-1, H, W]
             
-            # 广播首帧以匹配时间维度
-            base_latent_bc = base_latent.expand(-1, other_latent.shape[1], -1, -1)  # [C, T-1, H, W]
+            # 广播首帧
+            base_latent_bc = base_latent.expand(-1, other_latent.shape[1], -1, -1)
             
-            # 计算差异
-            diff = other_latent - base_latent_bc  # [C, T-1, H, W]
-            
-            # 计算均值（在C, H, W维度上）保持时间维度T不变
-            diff_mean = diff.mean(dim=(0, 2, 3), keepdim=True)  # [1, T-1, 1, 1]
-            
-            # 中心化和缩放
+            # 计算差异并增强（保持亮度稳定）
+            diff = other_latent - base_latent_bc
+            diff_mean = diff.mean(dim=(0, 2, 3), keepdim=True)
             diff_centered = diff - diff_mean
-            scaled_diff = diff_centered * motion_amplitude
+            scaled_other = base_latent_bc + diff_centered * motion_amplitude + diff_mean
             
-            # 重建增强的latent
-            scaled_other = base_latent_bc + scaled_diff + diff_mean  # [C, T-1, H, W]
+            # 安全裁剪
+            scaled_other = torch.clamp(scaled_other, -6, 6)
             
-            # 拼接回完整序列
-            y = torch.cat([base_latent, scaled_other], dim=1)  # [C, T, H, W]
-            
+            # 重组
+            y = torch.cat([base_latent, scaled_other], dim=1)
             print("✅ 动态增强完成\n")
         # ==================== 动态增强结束 ====================
 
@@ -180,20 +174,19 @@ class PainterI2VforKJ:
                 mask = torch.cat([mask, torch.zeros(base_frames - mask.shape[0], lat_h, lat_w, device=device)])
             mask = mask.unsqueeze(0).to(device, dtype)
 
-        # 重复掩码以适应VAE stride
+        # 重复掩码
         start_mask_repeated = torch.repeat_interleave(mask[:, 0:1], repeats=4, dim=1)
         if end_image is not None:
-            # 注意：这里需要根据fun_or_fl2v_model逻辑调整
             end_mask_repeated = torch.repeat_interleave(mask[:, -1:], repeats=4, dim=1)
             mask = torch.cat([start_mask_repeated, mask[:, 1:-1], end_mask_repeated], dim=1)
         else:
             mask = torch.cat([start_mask_repeated, mask[:, 1:]], dim=1)
 
         mask = mask.view(1, mask.shape[1] // 4, 4, lat_h, lat_w)
-        return mask.movedim(1, 2)[0]  # [4, T, H, W]
+        return mask.movedim(1, 2)[0]
     
     def create_empty_embeds(self, num_frames, width, height, control_embeds=None, extra_latents=None):
-        """创建空嵌入（无图像输入时）"""
+        """创建空嵌入"""
         target_shape = (16, (num_frames - 1) // VAE_STRIDE[0] + 1,
                         height // VAE_STRIDE[1],
                         width // VAE_STRIDE[2])
@@ -212,10 +205,9 @@ class PainterI2VforKJ:
     
     def prepare_image_sequence(self, vae, device, start_image, end_image, H, W, num_frames, 
                                noise_aug_strength, temporal_mask, fun_or_fl2v_model):
-        """准备图像序列用于VAE编码"""
+        """准备图像序列"""
         C = 3
         
-        # 处理起始帧
         if start_image is not None:
             start_image = start_image[..., :3]
             if start_image.shape[1] != H or start_image.shape[2] != W:
@@ -229,7 +221,6 @@ class PainterI2VforKJ:
         else:
             resized_start, T_start = None, 0
         
-        # 处理结束帧
         if end_image is not None:
             end_image = end_image[..., :3]
             if end_image.shape[1] != H or end_image.shape[2] != W:
@@ -243,7 +234,7 @@ class PainterI2VforKJ:
         else:
             resized_end, T_end = None, 0
         
-        # 拼接序列
+        # 拼接
         if temporal_mask is None:
             if start_image is not None and end_image is None:
                 zero_frames = torch.zeros(C, num_frames - T_start, H, W, device=device, dtype=vae.dtype)
