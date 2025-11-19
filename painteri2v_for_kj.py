@@ -176,10 +176,14 @@ class PainterI2VforKJ:
 
         # 重复掩码
         start_mask_repeated = torch.repeat_interleave(mask[:, 0:1], repeats=4, dim=1)
-        if end_image is not None:
+        
+        # 修复：根据是否有首尾帧和fun_or_fl2v_model来决定拼接逻辑
+        if end_image is not None and not (start_image is None and end_image is not None):
+            # 正常情况：有尾帧且不是只有尾帧的情况
             end_mask_repeated = torch.repeat_interleave(mask[:, -1:], repeats=4, dim=1)
             mask = torch.cat([start_mask_repeated, mask[:, 1:-1], end_mask_repeated], dim=1)
         else:
+            # 只有尾帧或其他情况
             mask = torch.cat([start_mask_repeated, mask[:, 1:]], dim=1)
 
         mask = mask.view(1, mask.shape[1] // 4, 4, lat_h, lat_w)
